@@ -1,0 +1,99 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Dashboard - PHF Stipend Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #stipendslip, #stipendslip * {
+                visibility: visible;
+            }
+            #stipendslip {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            .row > div {
+                float: left;
+                width: 33.33%;
+            }
+            .footer {
+                position: fixed;
+                bottom: 10px;
+                width: 100%;
+                text-align: center;
+                font-size: 12px;
+                color: gray;
+                visibility: visible;
+            }
+        }
+    </style>
+</head>
+<body class="sb-nav-fixed">
+    <div class="container" id="stipendslip">
+    {% block content %}
+    <table class="table table-stripped">
+        <thead>
+            <tr>
+                <th>S.No.</th>
+                <th>Name</th>
+                <th>CNIC</th>
+                <th>IBAN</th>
+                <th>End Date</th>
+                <th>Gross Stipend</th>
+                <th>ITax</th>
+                <th>Hostel</th>
+                <th>Utility Bills</th>
+                <th>Others</th>
+                <th>Net Stipend</th>
+                <th>Hospital</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for p in ph %}
+            <tr>
+                <td>{{forloop.counter}}</td>
+                <td>{{p.doctor.name}}</td>
+                <td>{{p.doctor.cnic}}</td>
+                <td>{{p.iban}}</td>
+                <td>{{p.doctor.end_date|date:"d-m-Y"}}</td>
+                <td>{{p.gross_stipend}}</td>
+                <td>{{p.itax}}</td>
+                <td>{{p.hostel}}</td>
+                <td>{{p.utility_bills}}</td>
+                <td>{{p.others}}</td>
+                <td>{{p.net_stipend}}</td>
+                <td>{{p.doctor.hospital}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endblock %}
+</div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+</body>
+</html>

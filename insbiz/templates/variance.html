@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block content %}
+    <main>
+    <table class="table table-stripped">
+        <thead>
+            <tr>
+                <th>S.No.</th>
+                <th>Name</th>
+                <th>CNIC</th>
+                <th>IBAN</th>
+                <th>End Date</th>
+                <th>Gross Stipend</th>
+                <th>ITax</th>
+                <th>Hostel</th>
+                <th>Utility Bills</th>
+                <th>Others</th>
+                <th>Net Stipend</th>
+                <th>Hospital</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for p in removed %}
+            <tr>
+                <td>{{forloop.counter}}</td>
+                <td>{{p.doctor.name}}</td>
+                <td>{{p.doctor.cnic}}</td>
+                <td>{{p.iban}}</td>
+                <td>{{p.doctor.end_date|date:"d-m-Y"}}</td>
+                <td>{{p.gross_stipend}}</td>
+                <td>{{p.itax}}</td>
+                <td>{{p.hostel}}</td>
+                <td>{{p.utility_bills}}</td>
+                <td>{{p.others}}</td>
+                <td>{{p.net_stipend}}</td>
+                <td>{{p.doctor.hospital}}</td>
+            </tr>
+            {% endfor %}
+            {% for p in added %}
+            <tr>
+                <td>{{forloop.counter}}</td>
+                <td>{{p.doctor.name}}</td>
+                <td>{{p.doctor.cnic}}</td>
+                <td>{{p.iban}}</td>
+                <td>{{p.doctor.end_date|date:"d-m-Y"}}</td>
+                <td>{{p.gross_stipend}}</td>
+                <td>{{p.itax}}</td>
+                <td>{{p.hostel}}</td>
+                <td>{{p.utility_bills}}</td>
+                <td>{{p.others}}</td>
+                <td>{{p.net_stipend}}</td>
+                <td>{{p.doctor.hospital}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+    {% endblock %}
+
