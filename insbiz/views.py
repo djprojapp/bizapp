@@ -44,7 +44,7 @@ def payslip(request):
         return render(request, 'payslip.html')
 
 def enddate(request):
-    ph=PaymentHistory.objects.filter(month=4).filter(year=2024)
+    ph=PaymentHistory.objects.filter(month=4).filter(year=2024).filter(doctor__end_date__lte="2024-04-30")
     phmay=PaymentHistory.objects.filter(month=5).filter(year=2024)
     return render(request, 'enddate.html', {'ph':ph, 'phmay':phmay})
 
