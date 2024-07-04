@@ -69,5 +69,8 @@ def added(request):
     added=PaymentHistory.objects.filter(month=5).filter(year=2024).filter(doctor_id__in=added_inmay)
     return render(request, 'variance.html', {'added':added})
 
-def stipendroll(request):
-    pass
+def paymentHistory(request):
+    if request.method=="POST":
+        cnic=request.POST['cnic']
+        ph=PaymentHistory.objects.filter(doctor__cnic=cnic)
+        
