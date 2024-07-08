@@ -13,25 +13,40 @@ def dashboard(request):
     ph=PaymentHistory.objects.filter(month=4).filter(year=2024)
     ph.count()
     phmay=PaymentHistory.objects.filter(month=5).filter(year=2024)
+    phjune=PaymentHistory.objects.filter(month=6).filter(year=2024)
     ts4=0
     ts5=0
+    ts6=0
     for p in ph:
         ts4 += p.gross_stipend
     tpg4=ph.count()
     for p in phmay:
         ts5 += p.gross_stipend
-    ts=ts4+ts5
+    for p in phjune:
+        ts6 += p.gross_stipend
+    ts=ts4+ts5+ts6
+    tph=PaymentHistory.objects.all()
+    od=0
+    for t in tph:
+        od +=t.others
+    budget=2738365000
+    bal=budget - ts + od -16900000
     tpg5=phmay.count()
+    tpg6=phjune.count()
     ph_ids = set(ph.values_list('doctor_id', flat=True))
     phmay_ids = set(phmay.values_list('doctor_id', flat=True))
-
     # Find objects removed in May (present in April but not in May)
     removed_in_may = len(ph_ids - phmay_ids)
-
     # Find objects added in May (present in May but not in April)
     added_in_may = len(phmay_ids - ph_ids)
+    #May & June comparision
+    phjune_ids = set(phjune.values_list('doctor_id', flat=True))
+    # Find objects removed in May (present in April but not in May)
+    removed_in_june = len(phmay_ids - phjune_ids)
+    # Find objects added in May (present in May but not in April)
+    added_in_june = len(phjune_ids-phmay_ids)
     status=Status.objects.raw("select * from insbiz_doctor left join insbiz_status on insbiz_doctor.id = insbiz_status.doctor_id left join insbiz_bankdetail on insbiz_doctor.id = insbiz_bankdetail.doctor_id left join insbiz_stipendslip on insbiz_doctor.id = insbiz_stipendslip.doctor_id left join insbiz_stipendrate on insbiz_stipendslip.stipendrate_id = insbiz_stipendrate.id")
-    return render(request, 'dashboard.html', {'doctors':doctors, 'status':status, 'pgr':pgr, 'doctor':doctor, 'apgr':apgr, 'ipgr':ipgr, 'ts4':ts4, 'tpg4':tpg4, 'ts5':ts5, 'tpg5':tpg5, 'removed_in_may':removed_in_may, 'added_in_may':added_in_may, 'ts':ts})
+    return render(request, 'dashboard.html', {'ts6':ts6, 'tpg6':tpg6, 'doctors':doctors, 'status':status, 'pgr':pgr, 'doctor':doctor, 'apgr':apgr, 'ipgr':ipgr, 'ts4':ts4, 'tpg4':tpg4, 'ts5':ts5, 'tpg5':tpg5, 'removed_in_may':removed_in_may, 'added_in_may':added_in_may, 'ts':ts, 'removed_in_june':removed_in_june, 'added_in_june':added_in_june, 'bal':bal})
 
 def payslip(request):
     if request.method=='POST':
@@ -69,8 +84,14 @@ def added(request):
     added=PaymentHistory.objects.filter(month=5).filter(year=2024).filter(doctor_id__in=added_inmay)
     return render(request, 'variance.html', {'added':added})
 
-def paymentHistory(request):
+def paymenthistory(request):
     if request.method=="POST":
         cnic=request.POST['cnic']
         ph=PaymentHistory.objects.filter(doctor__cnic=cnic)
-        
+        gt=0
+        for p in ph:
+            nts=p.net_stipend
+            gt += nts
+        return render(request, 'pyhis.html', {'ph':ph, 'gt':gt})
+    else:
+        return render(request, 'pyhis.html')

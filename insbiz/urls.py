@@ -10,4 +10,5 @@ urlpatterns=[
     path('enddate', views.enddate, name="enddate"),
     path('removed', views.removed, name="removed"),
     path('added', views.added, name="added"),
+    path('paymenthistory', views.paymenthistory, name="paymenthistory"),
 ]
