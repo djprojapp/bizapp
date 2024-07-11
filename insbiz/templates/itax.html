@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Income Tax Statement{% endblock %}
+{% block content %}
+<main>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #payhis, #payhis * {
+                visibility: visible;
+            }
+            #payhis {
+                position: absolute;
+                top: 10mm;
+                left: 10mm;
+                right: 10mm;
+                bottom: 10mm;
+                box-sizing: border-box;
+                width: calc(100% - 20mm);
+                height: calc(100vh - 20mm);
+            }
+        }
+    </style>
+    <div class="container justify-content-center">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6">
+                <div class="card bg-info">
+                    <div class="card-header text-center">Get Your Stipend Slip</div>
+                    <div class="card-body text-center">
+                        <form action="itaxstatement" method="POST" class="bg-info">
+                            {% csrf_token %}
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><label for="cnic">CNIC/Passport</label></td>
+                                    <td><input type="text" name="cnic" id="cnic" class="form-control" required></td>
+                                </tr>
+                            </table>
+                            <div class="card-footer text-center">
+                                <input type="submit" value="Get Slip" class="btn btn-primary">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div id="payhis" style="width: 210mm; margin:auto;" class="mt-4">
+            {% if ph %}
+            <table class="table table-bordered">
+                <thead>
+                   
+                    <tr>
+                        <th  colspan="{{colcount}}" style="text-align:center;">Income Tax Statement</th>
+                    </tr>
+                    <tr>
+                     {% for d in doctor %}<th>Name</th> <th  colspan="{{colcount}}-1" style="text-align:left;">{{d.name}}</th>{% endfor %}
+                    </tr>
+                    <tr>
+                        {% for d in doctor %} <th>CNIC#</th><th  colspan="{{colcount}}-1" style="text-align:left;">{{d.cnic}}</th>{% endfor %}
+                       </tr>
+                    
+                </thead>
+                <tbody>
+                    
+                    
+                    <tr>
+                        <td>Description</td>{% for p in ph %}<td>{{p.month}}/{{p.year}}</td>{% endfor %}<td>Total</td>                        
+                    </tr>
+                    <tr>
+                        <td>Gross Stipend</td>{% for p in ph %}<td>{{p.gross_stipend}}</td>{% endfor %}<td>{{gt}}</td>
+                    </tr>
+                    <tr>
+                        <td>Income Tax deducted</td>{% for p in ph %}<td>{{p.itax}}</td>{% endfor %}<td>{{titax}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

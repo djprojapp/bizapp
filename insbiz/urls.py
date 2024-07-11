@@ -11,4 +11,5 @@ urlpatterns=[
     path('removed', views.removed, name="removed"),
     path('added', views.added, name="added"),
     path('paymenthistory', views.paymenthistory, name="paymenthistory"),
+    path('itaxstatement', views.itaxstatement, name="itaxstatement"),
 ]

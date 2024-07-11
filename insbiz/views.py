@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.db.models import Count, Q
+from datetime import datetime
 from .models import Doctor, BankDetail, StipendRate, StipendSlip, Status, PaymentHistory
 
 # Create your views here.
@@ -9,6 +11,28 @@ def dashboard(request):
     apgr=Doctor.objects.filter(status__status="Active").count()
     ipgr=Doctor.objects.filter(status__status="Inactive").count()
     doctor=Doctor.objects.all()
+    #hospital wise summary
+    doctors = Doctor.objects.all().filter(end_date__gt=datetime.today())
+    active_status = Status.objects.filter(status="Active")
+    inactive_status = Status.objects.filter(status="Inactive")
+
+    hospital_data = doctors.values('hospital').annotate(
+        total_doctors=Count('id'),
+        active_status=Count('status', filter=Q(status__status="Active")),
+        inactive_status=Count('status', filter=Q(status__status="Inactive"))
+    ).order_by('hospital')
+
+    total_doctors = doctors.count()
+    total_active = active_status.count()
+    total_inactive = inactive_status.count()
+
+    context = {
+        'hospital_data': hospital_data,
+        'total_doctors': total_doctors,
+        'total_active': total_active,
+        'total_inactive': total_inactive,
+    }
+    #end hospital wise summary
     doctors = BankDetail.objects.select_related('doctor')
     ph=PaymentHistory.objects.filter(month=4).filter(year=2024)
     ph.count()
@@ -46,7 +70,10 @@ def dashboard(request):
     # Find objects added in May (present in May but not in April)
     added_in_june = len(phjune_ids-phmay_ids)
     status=Status.objects.raw("select * from insbiz_doctor left join insbiz_status on insbiz_doctor.id = insbiz_status.doctor_id left join insbiz_bankdetail on insbiz_doctor.id = insbiz_bankdetail.doctor_id left join insbiz_stipendslip on insbiz_doctor.id = insbiz_stipendslip.doctor_id left join insbiz_stipendrate on insbiz_stipendslip.stipendrate_id = insbiz_stipendrate.id")
-    return render(request, 'dashboard.html', {'ts6':ts6, 'tpg6':tpg6, 'doctors':doctors, 'status':status, 'pgr':pgr, 'doctor':doctor, 'apgr':apgr, 'ipgr':ipgr, 'ts4':ts4, 'tpg4':tpg4, 'ts5':ts5, 'tpg5':tpg5, 'removed_in_may':removed_in_may, 'added_in_may':added_in_may, 'ts':ts, 'removed_in_june':removed_in_june, 'added_in_june':added_in_june, 'bal':bal})
+    return render(request, 'dashboard.html', {'hospital_data': hospital_data,
+        'total_doctors': total_doctors,
+        'total_active': total_active,
+        'total_inactive': total_inactive,'ts6':ts6, 'tpg6':tpg6, 'doctors':doctors, 'status':status, 'pgr':pgr, 'doctor':doctor, 'apgr':apgr, 'ipgr':ipgr, 'ts4':ts4, 'tpg4':tpg4, 'ts5':ts5, 'tpg5':tpg5, 'removed_in_may':removed_in_may, 'added_in_may':added_in_may, 'ts':ts, 'removed_in_june':removed_in_june, 'added_in_june':added_in_june, 'bal':bal})
 
 def payslip(request):
     if request.method=='POST':
@@ -95,3 +122,18 @@ def paymenthistory(request):
         return render(request, 'pyhis.html', {'ph':ph, 'gt':gt})
     else:
         return render(request, 'pyhis.html')
+
+def itaxstatement(request):
+    if request.method=="POST":
+        cnic=request.POST['cnic']
+        ph=PaymentHistory.objects.filter(doctor__cnic=cnic)
+        doctor=Doctor.objects.filter(cnic=cnic)
+        colcount=2+len(ph)
+        gt=0
+        titax=0
+        for p in ph:
+           gt += p.gross_stipend
+           titax += p.itax
+        return render(request, 'itax.html', {'ph':ph, 'gt':gt, 'colcount':colcount, 'titax':titax, 'doctor':doctor})
+    else:
+        return render(request, 'itax.html')
