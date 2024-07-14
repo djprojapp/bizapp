@@ -2,10 +2,11 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Count, Q
 from datetime import datetime
+from django.contrib.auth.decorators import login_required
 from .models import Doctor, BankDetail, StipendRate, StipendSlip, Status, PaymentHistory
 
 # Create your views here.
-
+@login_required(login_url='/payslip')
 def dashboard(request):
     pgr=Doctor.objects.all().count()
     apgr=Doctor.objects.filter(status__status="Active").count()
@@ -81,9 +82,9 @@ def payslip(request):
         month=request.POST['month']
         year=request.POST['year']
         ph=PaymentHistory.objects.select_related('doctor').filter(month=month).filter(year=year).filter(doctor__cnic=cnic)
-        return render (request, 'payslip.html', {'ph':ph})
+        return render (request, 'payslipfp.html', {'ph':ph})
     else:
-        return render(request, 'payslip.html')
+        return render(request, 'payslipfp.html')
 
 def enddate(request):
     ph=PaymentHistory.objects.filter(month=4).filter(year=2024).filter(doctor__end_date__lte="2024-04-30")
@@ -128,12 +129,17 @@ def itaxstatement(request):
         cnic=request.POST['cnic']
         ph=PaymentHistory.objects.filter(doctor__cnic=cnic)
         doctor=Doctor.objects.filter(cnic=cnic)
-        colcount=2+len(ph)
+        colcount=len(ph)
+        colcount2=colcount+1
         gt=0
         titax=0
         for p in ph:
            gt += p.gross_stipend
            titax += p.itax
-        return render(request, 'itax.html', {'ph':ph, 'gt':gt, 'colcount':colcount, 'titax':titax, 'doctor':doctor})
+        return render(request, 'itax.html', {'ph':ph, 'gt':gt, 'colcount':colcount, 'titax':titax, 'doctor':doctor, 'colcount2':colcount2})
     else:
         return render(request, 'itax.html')
+    
+# payroll calculation
+def calculatestipend(request):
+    pass

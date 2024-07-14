@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Stipend Slip{% endblock %}
+{% block content %}
+<main>
+    <style>
+        
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #stipendslip, #stipendslip * {
+                visibility: visible;
+            }
+            #stipendslip {
+                position: absolute;
+                top: 0;
+                left: 20mm;
+                right: 0;
+                bottom: 0;
+                box-sizing: border-box;
+                width: 210mm;
+                height: 297mm;
+            }
+            .row > div {
+                float: left;
+                width: 33.33%;
+            }
+            .footer {
+                position: fixed;
+                bottom: 10px;
+                width: 100%;
+                text-align: center;
+                font-size: 12px;
+                color: gray;
+                visibility: visible;
+            }
+        }
+    </style>
+    <div class="container justify-content-center">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6">
+                <div class="card bg-info">
+                   <div class="card-header text-center">Stipend Slip</div>
+                    <div class="card-body text-center">
+                        <form action="payslip" method="POST" class="bg-info" onsubmit="return validateForm()">
+                            {% csrf_token %}
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><label>CNIC/Passport</label></td>
+                                    <td><input type="text" name="cnic" class="form-control" required></td>
+                                </tr>
+                                <tr>
+                                    <td><label>Month</label></td>
+                                    <td>
+                                        <input type="text" name="month" class="form-control" id="month" required>
+                                        <span id="monthError" class="text-danger"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>Year</label></td>
+                                    <td>
+                                        <input type="text" name="year" class="form-control" id="year" required>
+                                        <span id="yearError" class="text-danger"></span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                                <input type="submit" value="Get Slip" class="btn btn-primary">
+                           
+                        </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" >
+                {% for p in ph %}
+                
+                <div id="stipendslip" style="margin: 0 auto; text-align:justify;width:50%;">
+                                    <table class="table" style="width:190mm;">
+                        <th> <img src="{% static 'img/phf.png' %}" alt="" width="90" height="90"></th><th><h4 class="text-center">Government of Punjab</h4>
+                            <h5 class="text-center">Punjab Health Foundation, Lahore</h5>
+                            <h6 class="text-center">Monthly Stipend Statement ({{p.month}}/2024)</h6></th><th><img style="align-items: end;" src="{% static 'img/govtp.jpg' %}" alt="" width="90" height="90"></th>
+                    </table>
+                
+                
+                    <hr>
+                    <div>
+                        <table class="table table-borderless" style="width:190mm;">
+                            <tr>
+                                <th>Name of PGR:</th>
+                                <td colspan="3">{{p.doctor.name}}</td>
+                            </tr>
+                            <tr>
+                                <th>CNIC/Passport:</th>
+                                <td>{{p.doctor.cnic}}</td>
+                                <th>PMDC:</th>
+                                <td>{{p.doctor.pmdc}}</td>
+                            </tr>
+                            <tr>
+                                <th>Start Date</th>
+                                <td>{{p.doctor.start_date}}</td>
+                                <th>End Date</th>
+                                <td>{{p.doctor.end_date}}</td>
+                            </tr>
+                            <tr>
+                                <th>Speciality:</th>
+                                <td colspan="3">{{p.doctor.speciality}}</td>
+                            </tr>
+                            <tr>
+                                <th>Hospital:</th>
+                                <td colspan="3">{{p.doctor.hospital}}</td>
+                            </tr>
+                        </table>
+                        <table class="table table-bordered" id="table" style="width:190mm;">
+                            <tr>
+                                <th>Payments</th>
+                                <th>Amount</th>
+                                <th>Deductions</th>
+                                <th>Amount</th>
+                            </tr>
+                            <tr>
+                                <td>Stipend</td>
+                                <td style="text-align:right;">{{p.gross_stipend|intcomma}}</td>
+                                <td>Income Tax</td>
+                                <td style="text-align:right;">{{p.itax|intcomma}}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td>Hostel Charges</td>
+                                <td style="text-align:right;">{{p.hostel|intcomma}}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td>Utility Bills</td>
+                                <td style="text-align:right;">{{p.utility_bills|intcomma}}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td>Ohters</td>
+                                <td style="text-align:right;">{{p.others|intcomma}}</td>
+                            </tr>
+                        </table>
+                        <table class="table" style="width:210mm;">
+                            <tr>
+                                <th>Net Stipend: </th>
+                                <td>{{p.net_stipend|intcomma}}</td>
+                            </tr>
+                            <tr>
+                                <th>Account Title: </th>
+                                <td>{{p.account_title}}</td>
+                            </tr>
+                            <tr>
+                                <th>IBAN: </th>
+                                <td>{{p.iban}}</td>
+                            </tr>
+                        </table>
+                        <hr>
+                        <table class="table table-borderless" style="width:190mm;">
+                            <tr>
+                                <th>Email: </th>
+                                <td>{{p.doctor.email}}</td>
+                            
+                                <th>Cell#: </th>
+                                <td>{{p.doctor.phone}}</td>
+                            </tr>
+                           
+                        </table>
+                        <div class="footer">
+                            System generated stipend slip, signatures not required.
+                        </div>
+                    </div>
+                </div>
+               
+         
+      
+        <div class="text-center mt-4">
+            <button class="btn btn-primary" onclick="window.print()">Print</button>
+        </div>
+    </div>
+    
+    {% endfor %}
+   
+
+    <!-- Bootstrap JS and dependencies -->
+    
+    <script>
+        function validateForm() {
+            let month = document.getElementById("month").value;
+            let year = document.getElementById("year").value;
+            let isValid = true;
+        
+            // Validate month
+            if (isNaN(month) || month < 1 || month > 12) {
+                document.getElementById("monthError").innerText = "Please enter a valid month (1-12).";
+                isValid = false;
+            } else {
+                document.getElementById("monthError").innerText = "";
+            }
+        
+            // Validate year
+            if (isNaN(year) || year != 2024) {
+                document.getElementById("yearError").innerText = "Please enter the year 2024.";
+                isValid = false;
+            } else {
+                document.getElementById("yearError").innerText = "";
+            }
+        
+            return isValid;
+        }
+        </script>
+    </div>
+    
+    </main>
+    {% endblock %}
