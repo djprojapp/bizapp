@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4;
-            margin: 10mm;
+            margin: 0;
         }
         @media print {
             body * {
@@ -18,7 +18,7 @@
             }
             #payhis {
                 position: absolute;
-                top: 10mm;
+                top: 0;
                 left: 10mm;
                 right: 10mm;
                 bottom: 10mm;
@@ -55,6 +55,7 @@
                                 <input type="submit" value="Submit" class="btn btn-primary">
                             
                         </form>
+                        <div class="position-absolute bottom-0 end-0">{{total_doc}}</div>
                     </div>
                 </div>
             </div>
@@ -66,7 +67,7 @@
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th><img src="{% static 'img/phf.png' %}" alt="" width="90" height="90"></th><th colspan="2" style="text-align:center;">Payment History</th><th><img style="align-items: end;" src="{% static 'img/govtp.jpg' %}" alt="" width="90" height="90"></th>
+                        <th><img src="{% static 'img/phf.png' %}" alt="" width="90" height="90"></th><th colspan="2" style="text-align:center; vertical-align:middle;">Payment History</th><th><img style="align-items: end;" src="{% static 'img/govtp.jpg' %}" alt="" width="90" height="90"></th>
                     </tr>
                     <tr>
                         <th>Month/Year</th>

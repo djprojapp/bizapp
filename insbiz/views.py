@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.db.models import Count, Q
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
-from .models import Doctor, BankDetail, StipendRate, StipendSlip, Status, PaymentHistory
+from .models import Doctor, BankDetail, StipendRate, StipendSlip, Status, PaymentHistory, DocCounter
 
 # Create your views here.
 @login_required(login_url='/payslip')
@@ -81,8 +81,14 @@ def payslip(request):
         cnic=request.POST['cnic']
         month=request.POST['month']
         year=request.POST['year']
+        doc_counter=DocCounter.objects.filter(id=1)
+        total_doc=0
+        for d in doc_counter:
+            total_doc = d.doc_total
+            total_doc += 1
+            DocCounter.objects.filter(id=1).update(doc_total=total_doc)
         ph=PaymentHistory.objects.select_related('doctor').filter(month=month).filter(year=year).filter(doctor__cnic=cnic)
-        return render (request, 'payslipfp.html', {'ph':ph})
+        return render (request, 'payslipfp.html', {'ph':ph, 'total_doc':total_doc})
     else:
         return render(request, 'payslipfp.html')
 
@@ -120,7 +126,13 @@ def paymenthistory(request):
         for p in ph:
             nts=p.net_stipend
             gt += nts
-        return render(request, 'pyhis.html', {'ph':ph, 'gt':gt})
+        doc_counter=DocCounter.objects.filter(id=1)
+        total_doc=0
+        for d in doc_counter:
+            total_doc = d.doc_total
+            total_doc += 1
+            DocCounter.objects.filter(id=1).update(doc_total=total_doc)
+        return render(request, 'pyhis.html', {'ph':ph, 'gt':gt, 'total_doc':total_doc})
     else:
         return render(request, 'pyhis.html')
 
@@ -136,7 +148,13 @@ def itaxstatement(request):
         for p in ph:
            gt += p.gross_stipend
            titax += p.itax
-        return render(request, 'itax.html', {'ph':ph, 'gt':gt, 'colcount':colcount, 'titax':titax, 'doctor':doctor, 'colcount2':colcount2})
+        doc_counter=DocCounter.objects.filter(id=1)
+        total_doc=0
+        for d in doc_counter:
+            total_doc = d.doc_total
+            total_doc += 1
+            DocCounter.objects.filter(id=1).update(doc_total=total_doc)
+        return render(request, 'itax.html', {'total_doc':total_doc,  'ph':ph, 'gt':gt, 'colcount':colcount, 'titax':titax, 'doctor':doctor, 'colcount2':colcount2})
     else:
         return render(request, 'itax.html')
     

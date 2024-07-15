@@ -1,6 +1,9 @@
 from django.db import models
 
 # Create your models here.
+class DocCounter(models.Model):
+    doc_total=models.IntegerField( default=0)
+    
 class Doctor(models.Model):
     name=models.CharField(max_length=225)
     cnic=models.CharField(max_length=13)
