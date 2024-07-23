@@ -1,21 +1,22 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db.models import Count, Q
-from datetime import datetime
+from django.db.models import Count, Q, Sum
+from datetime import datetime, date, timedelta
+import calendar
 from django.contrib.auth.decorators import login_required
 from .models import Doctor, BankDetail, StipendRate, StipendSlip, Status, PaymentHistory, DocCounter
 
 # Create your views here.
-@login_required(login_url='/payslip')
+#@login_required(login_url='/payslip')
 def dashboard(request):
     pgr=Doctor.objects.all().count()
     apgr=Doctor.objects.filter(status__status="Active").count()
     ipgr=Doctor.objects.filter(status__status="Inactive").count()
     doctor=Doctor.objects.all()
     #hospital wise summary
-    doctors = Doctor.objects.all().filter(end_date__gt=datetime.today())
-    active_status = Status.objects.filter(status="Active")
-    inactive_status = Status.objects.filter(status="Inactive")
+    doctors = Doctor.objects.filter(end_date__gt=datetime.today())
+    active_status = Status.objects.filter(status="Active").filter(doctor__end_date__gt=datetime.today())
+    inactive_status = Status.objects.filter(status="Inactive").filter(doctor__end_date__gt=datetime.today())
 
     hospital_data = doctors.values('hospital').annotate(
         total_doctors=Count('id'),
@@ -34,7 +35,7 @@ def dashboard(request):
         'total_inactive': total_inactive,
     }
     #end hospital wise summary
-    doctors = BankDetail.objects.select_related('doctor')
+    doctors = BankDetail.objects.select_related('doctor').filter(doctor__end_date__gt=datetime.today())
     ph=PaymentHistory.objects.filter(month=4).filter(year=2024)
     ph.count()
     phmay=PaymentHistory.objects.filter(month=5).filter(year=2024)
@@ -157,7 +158,106 @@ def itaxstatement(request):
         return render(request, 'itax.html', {'total_doc':total_doc,  'ph':ph, 'gt':gt, 'colcount':colcount, 'titax':titax, 'doctor':doctor, 'colcount2':colcount2})
     else:
         return render(request, 'itax.html')
+
+def months_between_dates(start_date, end_date):
+    end_date= end_date + timedelta(days=1)
+    delta = end_date - start_date
+    total_days = delta.days
+
+    years = total_days // 365
+    remaining_days = total_days % 365
+
+    temp_date = start_date + timedelta(days=years * 365)
+    months = 0
+
+    while temp_date + timedelta(days=calendar.monthrange(temp_date.year, temp_date.month)[1]) <= end_date:
+        days_in_month = calendar.monthrange(temp_date.year, temp_date.month)[1]
+        temp_date += timedelta(days=days_in_month)
+        months += 1
     
+    days = (end_date - temp_date).days
+
+    return years, months, days
+
+    
+    return total_months  
+def days_between_dates(date1, date2):
+    return (date2 - date1).days
 # payroll calculation
+
 def calculatestipend(request):
-    pass
+    if request.method=="POST":
+        month=int(request.POST['month'])
+        year=int(request.POST['year'])
+        first_date = date(year, month, 1)
+        last_date = date(year, month, calendar.monthrange(year, month)[1])
+        num_days_in_month = calendar.monthrange(year, month)[1]
+        doctor=Doctor.objects.filter(status__status="Active")
+        stipend=[]
+        stipendslip=StipendSlip.objects.filter(doctor__status__status="Active").filter(doctor__end_date__gte=first_date)
+        for s in stipendslip:
+            doctor_id=s.doctor_id
+            name=s.doctor.name
+            amount=s.stipendrate.stipend_rate
+            end_date=s.doctor.end_date
+            
+            if end_date<last_date:
+                days=months_between_dates(first_date, end_date)
+                amount= round(amount/num_days_in_month*days[2])
+            # Convert the string to a datetime.date object
+            current_date=datetime.now().date()
+            if current_date.month >= 7:  # If the current month is July or later
+                fy_start_date = date(current_date.year, 7, 1)
+                fy_end_date = date(current_date.year + 1, 6, 30)
+            else:  # If the current month is before July
+                fy_start_date = date(current_date.year - 1, 7, 1)
+                fy_end_date = date(current_date.year, 6, 30)
+            #
+            if end_date < fy_end_date:
+                t_month=months_between_dates(fy_start_date, end_date)
+                annual_income=amount*t_month[1]+amount/30*t_month[2]
+            else:            
+                t_month=months_between_dates(fy_start_date, fy_end_date)
+                annual_income=amount*(t_month[0]*12)
+            if annual_income<600000:
+                t_itax=0
+            elif annual_income < 1200000:
+                t_itax= (annual_income-600000)*0.05
+            else:
+                t_itax=30000+(annual_income-1200000)*0.15
+            if end_date > fy_end_date:
+                t_month=months_between_dates(fy_start_date, fy_end_date)
+                itax=round(t_itax/12)
+            elif end_date < fy_end_date:
+                t_month=months_between_dates(fy_start_date, end_date)
+                if t_month[1] !=0 and t_month[2]>15:
+                    itax=round(t_itax/(t_month[1]+1))
+                elif t_month[1] !=0 and t_month[2]==0:
+                    itax=round(t_itax/t_month[1])
+                else:
+                    itax=round(t_itax)
+            
+            net_stipend=amount-itax
+            stipend.append([doctor_id,name, amount, itax, net_stipend, end_date, current_date, t_month])
+        bar=len(doctor)
+        return render(request, 'stipendroll.html', {'month':month, 'year':year, 'bar':bar, 'doctor':doctor, 'stipend':stipend})
+    else:
+        return render(request, 'stipendroll.html')
+
+def deductions(request):
+    ph=PaymentHistory.objects.all()
+
+    hospital_data = ph.values('doctor__hospital').annotate(
+        total_hospitals=Count('id'),
+        hostel_charges=Sum('hostel'),
+        utility_bills=Sum('utility_bills')
+    )
+    # Calculate overall totals
+    total_hostel_charges = hospital_data.aggregate(Sum('hostel_charges'))['hostel_charges__sum'] or 0
+    total_utility_bills = hospital_data.aggregate(Sum('utility_bills'))['utility_bills__sum'] or 0
+
+    return render(request, 'deductions.html', {
+        'hospital_data': hospital_data,
+        'total_hostel_charges': total_hostel_charges,
+        'total_utility_bills': total_utility_bills
+    })

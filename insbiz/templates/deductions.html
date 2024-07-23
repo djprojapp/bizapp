@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Calculation{% endblock %}
+{% block content %}
+<main>
+   <table class="table table-striped">
+  
+  <tr>
+   <th>Sr.No.</th><th>Hospital</th> <th>Hostel Charges</th><th>Utility Bills</th>
+  </tr>
+  {% for data in hospital_data %}
+  <tr>
+   <td>{{forloop.counter}}</td><td>{{data.doctor__hospital}}</td> <td>{{data.hostel_charges|intcomma}}</td><td>{{data.utility_bills|intcomma}}</td>
+  </tr>
+    
+  {% endfor %}
+  <tr>
+    <td colspan="2">Grand Total</td><td>{{total_hostel_charges|intcomma}}</td><td>{{total_utility_bills|intcomma}}</td>
+</tr>
+</table>
+</main>
+{% endblock %}

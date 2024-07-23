@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Calculation{% endblock %}
+{% block content %}
+<main>
+   <div class="container justify-content-center">
+      <div class="row justify-content-center">
+          <div class="col-12 col-md-6">
+              <div class="card bg-info">
+                 <div class="card-header text-center">Process Stipend Roll</div>
+                  <div class="card-body text-center">
+                      <form action="calculatestipend" method="POST" class="bg-info">
+                          {% csrf_token %}
+                          <table class="table table-borderless">
+                              
+                              <tr>
+                                  <td><label>Month</label></td>
+                                  <td>
+                                      <input type="text" name="month" class="form-control" id="month" required>
+                                      <span id="monthError" class="text-danger"></span>
+                                  </td>
+                              </tr>
+                              <tr>
+                                  <td><label>Year</label></td>
+                                  <td>
+                                      <input type="text" name="year" class="form-control" id="year" required>
+                                      <span id="yearError" class="text-danger"></span>
+                                  </td>
+                              </tr>
+                          </table>
+                          
+                              <input type="submit" value="Process" class="btn btn-primary">
+                         
+                      </form>
+                      
+              </div>
+          </div>
+      </div>
+  </div>
+  {% if stipend %}
+   <table class="table table-striped">
+    <tr>
+        <th colspan="7" style="text-align:center;">Punjab Health Founation Lahore</th>
+        
+    </tr>
+    <tr>
+        
+        <th colspan="7" style="text-align:center;">Stipend Payment Advice for the month {{month}}/{{year}}</th>
+    </tr>
+      <tr>
+         <th>Sr.No.</th><th>Name</th><th>Gross Stipend</th><th>Income Tax</th><th>Net Stipend</th><th>End Date</th><th>(Year,Monts,Days)</th>
+      </tr>
+   {% for i, j, k, l, m,n,o,p in stipend %}
+   <tr>
+   <td>{{forloop.counter}}</td><td>{{j|title}}</td><td>{{k|intcomma}}</td><td>{{l|intcomma}}</td><td>{{m|intcomma}}</td><td>{{n|date:"d-m-Y"}}</td><td>{{p}}</td>
+</tr>
+   {% endfor %}
+</table>
+{% endif %}
+
+</main>
+{% endblock %}

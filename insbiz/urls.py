@@ -12,4 +12,6 @@ urlpatterns=[
     path('added', views.added, name="added"),
     path('paymenthistory', views.paymenthistory, name="paymenthistory"),
     path('itaxstatement', views.itaxstatement, name="itaxstatement"),
+    path('calculatestipend', views.calculatestipend, name="calculatestipend"),
+    path('deductions', views.deductions, name="deductions"),
 ]
